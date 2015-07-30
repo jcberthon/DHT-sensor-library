@@ -29,7 +29,7 @@ void jDHT::begin(void) {
 }
 
 int16_t jDHT::readTemperature(void) {
-  int16_t temp = -274; // Absolute Zero is -273.15 Celsius, so -274 cannot exist and is considered as an error code
+  int16_t temp = -2740; // Absolute Zero is -273.15 Celsius, so -2740 cannot exist and is considered as an error code
 
   if (read()) {
     switch (_type) {
