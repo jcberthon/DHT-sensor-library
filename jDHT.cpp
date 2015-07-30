@@ -1,12 +1,14 @@
 /* DHT library
+ *
+ * MIT license
+ * Originally written by Adafruit Industries
+ * 
+ * Updated by Jean-Christophe Berthon
+ */
 
-MIT license
-written by Adafruit Industries
-*/
+#include "jDHT.h"
 
-#include "DHT.h"
-
-DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
+jDHT::jDHT(uint8_t pin, uint8_t type, uint8_t count) {
   _pin = pin;
   _type = type;
   _firstreading = true;
@@ -15,10 +17,10 @@ DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
   _maxcycles = microsecondsToClockCycles(1000);  // 1 millisecond timeout for
                                                  // reading pulses from DHT sensor.
   // Note that count is now ignored as the DHT reading algorithm adjusts itself
-  // basd on the speed of the processor.
+  // based on the speed of the processor.
 }
 
-void DHT::begin(void) {
+void jDHT::begin(void) {
   // set up the pins!
   pinMode(_pin, INPUT);
   digitalWrite(_pin, HIGH);
@@ -26,94 +28,48 @@ void DHT::begin(void) {
   DEBUG_PRINT("Max clock cycles: "); DEBUG_PRINTLN(_maxcycles, DEC);
 }
 
-//boolean S == Scale.  True == Fahrenheit; False == Celcius
-float DHT::readTemperature(bool S) {
-  float f = NAN;
+int16_t jDHT::readTemperature(void) {
+  int16_t temp = -274; // Absolute Zero is -273.15 Celsius, so -274 cannot exist and is considered as an error code
 
   if (read()) {
     switch (_type) {
     case DHT11:
-      f = data[2];
-      if(S) {
-        f = convertCtoF(f);
-      }
+      temp = data[2];
       break;
     case DHT22:
     case DHT21:
-      f = data[2] & 0x7F;
-      f *= 256;
-      f += data[3];
-      f /= 10;
+      temp = data[2] & 0x7F;
+      temp *= 256;
+      temp += data[3];
       if (data[2] & 0x80) {
-        f *= -1;
-      }
-      if(S) {
-        f = convertCtoF(f);
+        temp *= -1;
       }
       break;
     }
   }
-  return f;
+  return temp;
 }
 
-float DHT::convertCtoF(float c) {
-  return c * 9 / 5 + 32;
-}
 
-float DHT::convertFtoC(float f) {
-  return (f - 32) * 5 / 9;
-}
-
-float DHT::readHumidity(void) {
-  float f = NAN;
+uint16_t jDHT::readHumidity(void) {
+  uint16_t hum = 1010; // this is an error code (means 1010% or 101% respectively for DHT11 and DHT22, both are non-existing humidity values)
   if (read()) {
     switch (_type) {
     case DHT11:
-      f = data[0];
+      hum = data[0];
       break;
     case DHT22:
     case DHT21:
-      f = data[0];
-      f *= 256;
-      f += data[1];
-      f /= 10;
+      hum = data[0];
+      hum *= 256;
+      hum += data[1];
       break;
     }
   }
-  return f;
+  return hum;
 }
 
-//boolean isFahrenheit: True == Fahrenheit; False == Celcius
-float DHT::computeHeatIndex(float temperature, float percentHumidity, bool isFahrenheit) {
-  // Adapted from equation at: https://github.com/adafruit/DHT-sensor-library/issues/9 and
-  // Wikipedia: http://en.wikipedia.org/wiki/Heat_index
-  if (!isFahrenheit) {
-    // Celsius heat index calculation.
-    return -8.784695 +
-             1.61139411 * temperature +
-             2.338549   * percentHumidity +
-            -0.14611605 * temperature*percentHumidity +
-            -0.01230809 * pow(temperature, 2) +
-            -0.01642482 * pow(percentHumidity, 2) +
-             0.00221173 * pow(temperature, 2) * percentHumidity +
-             0.00072546 * temperature*pow(percentHumidity, 2) +
-            -0.00000358 * pow(temperature, 2) * pow(percentHumidity, 2);
-  }
-  else {
-    // Fahrenheit heat index calculation.
-    return -42.379 +
-             2.04901523 * temperature +
-            10.14333127 * percentHumidity +
-            -0.22475541 * temperature*percentHumidity +
-            -0.00683783 * pow(temperature, 2) +
-            -0.05481717 * pow(percentHumidity, 2) +
-             0.00122874 * pow(temperature, 2) * percentHumidity +
-             0.00085282 * temperature*pow(percentHumidity, 2) +
-            -0.00000199 * pow(temperature, 2) * pow(percentHumidity, 2);
-  }
-}
-
-boolean DHT::read(void) {
+boolean jDHT::read(void) {
   // Check if sensor was read less than two seconds ago and return early
   // to use last reading.
   uint32_t currenttime = millis();
@@ -232,7 +188,7 @@ boolean DHT::read(void) {
 // This is adapted from Arduino's pulseInLong function (which is only available
 // in the very latest IDE versions):
 //   https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/wiring_pulse.c
-uint32_t DHT::expectPulse(bool level) {
+uint32_t jDHT::expectPulse(bool level) {
   uint32_t count = 0;
   // On AVR platforms use direct GPIO port access as it's much faster and better
   // for catching pulses that are 10's of microseconds in length:

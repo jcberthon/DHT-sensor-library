@@ -1,10 +1,12 @@
 /* DHT library
-
-MIT license
-written by Adafruit Industries
-*/
-#ifndef DHT_H
-#define DHT_H
+ *
+ * MIT license
+ * Originally written by Adafruit Industries
+ * 
+ * Updated by Jean-Christophe Berthon
+ */
+#ifndef JCB_DHT_H
+#define JCB_DHT_H
 
 #if ARDUINO >= 100
  #include "Arduino.h"
@@ -35,15 +37,12 @@ written by Adafruit Industries
 #define AM2301 21
 
 
-class DHT {
+class jDHT {
   public:
-   DHT(uint8_t pin, uint8_t type, uint8_t count=6);
+   jDHT(uint8_t pin, uint8_t type, uint8_t count=6);
    void begin(void);
-   float readTemperature(bool S=false);
-   float convertCtoF(float);
-   float convertFtoC(float);
-   float computeHeatIndex(float temperature, float percentHumidity, bool isFahrenheit=true);
-   float readHumidity(void);
+   int16_t readTemperature(void);
+   uint16_t readHumidity(void);
    boolean read(void);
 
  private:
